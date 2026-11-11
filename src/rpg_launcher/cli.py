@@ -386,6 +386,11 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     except _Quit:
         return 0
+    except BrokenPipeError:
+        # Whatever was reading our output went away (for example `| head`).
+        # Point stdout elsewhere so Python does not fail again while exiting.
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        return 1
     except KeyboardInterrupt:
         print()
         return 130
