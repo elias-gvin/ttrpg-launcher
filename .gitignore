@@ -5,3 +5,7 @@ dist/
 result
 result-*
 .direnv/
+
+# The GM's real presets: they contain room names and passwords.
+# This directory is its own local git repository.
+/presets/
