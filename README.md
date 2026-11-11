@@ -174,3 +174,25 @@ python -m unittest discover -s tests
 python -m rpg_launcher --presets examples/presets launch samosbor --dry-run
 nix flake check    # builds the package and runs the tests
 ```
+
+### Adding a component
+
+A component is one kind of thing a game can start. OBS, plain applications
+and browser pages are the three built in, each one module in
+[src/rpg_launcher/components](src/rpg_launcher/components). To add another:
+
+1. Write a module there with a class that subclasses `Component` from
+   `base.py`. Give it a `key`, the name of its table in a game preset, and
+   these methods:
+   - `parse` reads that table and returns the component's settings.
+   - `start` starts things through `context.spawn()` and yields an `Outcome`
+     for each.
+   - `needed_apps` and `diagnose` are optional and feed `doctor`.
+2. Add an instance to `COMPONENTS` in `components/__init__.py`. The order
+   there is the launch order.
+
+Preset validation, machine overrides, dry runs, status output, manual checks
+and `doctor` then cover the new component without further changes. Extra
+machine settings for its application are declared with `app_options`.
+`apps.py` is the shortest example; `tests/test_components.py` adds a made-up
+component from outside.
