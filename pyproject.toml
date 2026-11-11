@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rpg-launcher"
+version = "0.1.0"
+description = "Start a tabletop RPG session's apps and pages, then hand out player links"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+rpg-launcher = "rpg_launcher.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

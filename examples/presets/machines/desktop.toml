@@ -1,0 +1,19 @@
+# Example machine preset: an Arch desktop where OBS and Discord are Flatpaks.
+#
+# A machine file lists only what differs from the defaults. By default an
+# application is started by its own name (obs, chromium, discord), which is
+# right for NixOS and for most distribution packages.
+
+name = "Desktop"
+
+# This file is used when the computer's hostname is listed here, or when the
+# file itself is named after the hostname.
+hostnames = ["archlinux"]
+
+[apps.obs]
+command = ["flatpak", "run", "com.obsproject.Studio"]
+# Where this OBS keeps its settings, so `doctor` can check profile and scene names.
+config_dir = "~/.var/app/com.obsproject.Studio/config/obs-studio"
+
+[apps.discord]
+command = ["flatpak", "run", "com.discordapp.Discord"]

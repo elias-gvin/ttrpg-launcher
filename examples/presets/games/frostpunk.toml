@@ -1,0 +1,26 @@
+# A smaller example: one link for all players, no extra applications.
+# Every link here is a placeholder.
+
+name = "Frostpunk"
+
+[obs]
+scene = "Scene  - VDO (Frostpunk)"
+
+[open.director]
+label = "Director"
+url = "https://vdo.ninja/?director=EXAMPLE_FROST&password=CHANGE_ME&showdirector"
+
+[open.music]
+label = "Music"
+url = "https://www.youtube.com/playlist?list=EXAMPLE_FROST_PLAYLIST"
+
+[invitation]
+note = "Please use headphones."
+
+[invitation.shared.join]
+label = "Join game"
+url = "https://vdo.ninja/?room=EXAMPLE_FROST&hash=0000&l&sl&q"
+
+[invitation.shared.dice]
+label = "Dice channel"
+url = "https://discord.com/channels/000000000000000000/000000000000000001"

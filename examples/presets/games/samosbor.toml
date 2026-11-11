@@ -1,0 +1,75 @@
+# Example game preset. Every link here is a placeholder: put your real ones in
+# your own presets directory, not in the launcher repository.
+#
+# URLs are passed on exactly as written, so every VDO.Ninja option stays in
+# the URL where VDO.Ninja expects it.
+
+name = "Samosbor 2"
+
+# Other applications to start. How each one is started is the machine's business.
+apps = ["discord"]
+
+# Reminders that belong to the game as a whole.
+checks = ["Ask one player to confirm they hear you and the music"]
+
+# OBS names are the ones OBS itself shows. The VDO.Ninja scene link stays inside
+# the OBS scene, as a browser source. All keys are optional.
+[obs]
+scene = "Scene - VDO (Samosbor)"
+# profile = "RPG"
+# collection = "Untitled"
+record = false # true starts recording as soon as OBS opens
+checks = ["Browser source unmuted; everything else muted, including the microphone"]
+
+# Pages for the GM's browser. These never appear in the player invitation.
+[open.director]
+label = "Director"
+url = "https://vdo.ninja/?director=EXAMPLE_ROOM&password=CHANGE_ME&showdirector&push=EXAMPLE_GM"
+
+[open.radio]
+label = "Radio (music out)"
+url = "https://vdo.ninja/?room=EXAMPLE_ROOM&hash=0000&l&sl&avatar&vd=0&proaudio&oab=160&push=05&smallshare"
+checks = [
+  "Share the Music tab from this page, with tab audio switched on",
+  "Mute the Music tab so you do not hear the music twice",
+  "Pick an audio source that keeps your headphones out of hands-free mode",
+  "If others cannot see the avatar, switch video off and on",
+]
+
+[open.screen]
+label = "Screen share"
+# &blind blocks the video and audio settings panel.
+url = "https://vdo.ninja/?room=EXAMPLE_ROOM&hash=0000&l=Board&sl&g=0&ad=0&deafen&noaudio&blind&push=06&screenshare&screensharetype=2"
+checks = ["For the large layout, join first and then click the share-screen button"]
+
+[open.music]
+label = "Music"
+url = "https://www.youtube.com/playlist?list=EXAMPLE_PLAYLIST"
+
+[open.board]
+label = "Board"
+url = "https://app.diagrams.net/#GEXAMPLE_FILE_ID"
+window = true # its own window, so it can be shared on its own
+
+# What players receive. Each player gets a message with their own link followed
+# by the shared links.
+[invitation]
+intro = "Samosbor 2 is about to start. Your links:"
+note = "Please use headphones."
+player_link_label = "Join voice and video"
+
+[invitation.shared.dice]
+label = "Dice channel"
+url = "https://discord.com/channels/000000000000000000/000000000000000000"
+
+[invitation.players.player1]
+name = "Player 1"
+url = "https://vdo.ninja/?room=EXAMPLE_ROOM&hash=0000&l&sl&q&vd&comp&eq&avatar&voiceisolation&echocancellation&denoise&audiocontenthint=voice&noisegate&push=01"
+
+[invitation.players.player2]
+name = "Player 2"
+url = "https://vdo.ninja/?room=EXAMPLE_ROOM&hash=0000&l&sl&q&vd&comp&eq&avatar&voiceisolation&echocancellation&denoise&audiocontenthint=voice&noisegate&push=02"
+
+[invitation.players.player3]
+name = "Player 3"
+url = "https://vdo.ninja/?room=EXAMPLE_ROOM&hash=0000&l&sl&q&vd&comp&eq&avatar&voiceisolation&echocancellation&denoise&audiocontenthint=voice&noisegate&push=03"

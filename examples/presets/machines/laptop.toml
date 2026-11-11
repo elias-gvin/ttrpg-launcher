@@ -1,0 +1,15 @@
+# Example machine preset: a NixOS laptop that does not record.
+# Applications use their default commands, so none are listed.
+
+name = "Laptop"
+hostnames = ["laptop"]
+
+# This machine never starts OBS, whatever the game asks for. The launcher
+# reports it as skipped.
+[apps.obs]
+enabled = false
+
+# A change to one game on this machine only. Anything a game preset can say can
+# be overridden here; everything else is inherited.
+[overrides.samosbor.open.board]
+window = false # small screen: keep the board as a tab
