@@ -6,7 +6,8 @@ send to players.
 
 It starts the tools you already use (OBS, Chromium, Discord, VDO.Ninja pages)
 and leaves their settings to them. See [docs/PRD.md](docs/PRD.md) for the
-requirements and [docs/decisions.md](docs/decisions.md) for the choices made.
+requirements; its section 17 records the decisions made, the GM's preferences
+and what is still open.
 
 ## Install
 
@@ -53,6 +54,13 @@ repository because VDO.Ninja links carry room names and passwords.
 Another location can be given with `--presets DIR` or `$RPG_LAUNCHER_PRESETS`.
 To start, copy [examples/presets](examples/presets) there and replace the
 placeholder links.
+
+A `presets/` directory inside a checkout of this repository is ignored by git,
+so presets can also sit next to the code:
+
+```sh
+export RPG_LAUNCHER_PRESETS=/path/to/rpg_launcher/presets
+```
 
 ## Use
 

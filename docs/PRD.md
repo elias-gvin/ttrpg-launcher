@@ -1,12 +1,16 @@
 # RPG Session Launcher — Product Requirements Document
 
-**Status:** Draft for developer review  
-**Version:** 0.1  
-**Date:** 2026-11-10  
+**Status:** Design decisions agreed with the GM; MVP implemented in this repository, not yet used for a real session  
+**Version:** 0.2  
+**Date:** 2026-11-11 (version 0.1: 2026-11-10)  
 **Product type:** Local RPG session launcher and environment manager  
 **Primary user:** Game Master (GM) running online tabletop RPG sessions
 
 > **Document intent:** Describe **what** the product should achieve and **why**, not prescribe its internal implementation. Items labeled **Confirmed** reflect the current discussion; items labeled **Proposed** need validation. Questions and unknowns are explicitly marked **Open**.
+>
+> **Version 0.2:** Items labeled **Decided** were agreed with the GM on 2026-11-11. They are collected in **§17, which is authoritative**: where older wording elsewhere in this document differs, §17 wins. §17 also records the GM's stated preferences, what is still open, and what has been built.
+>
+> **No real links or passwords belong in this document.** They live only in the GM's private presets (§17.3).
 
 ---
 
@@ -47,7 +51,7 @@ A typical future workflow should be:
 5. Copy or share the player invitation containing the correct links.
 6. Run the game using the familiar applications.
 
-The exact interaction (CLI, GUI, web interface) is **not yet decided**.
+**Decided:** The interface is a command-line program with an interactive game picker and a menu after launch (§8, §17.2).
 
 ## 3. Current environment and workflow
 
@@ -55,19 +59,34 @@ The exact interaction (CLI, GUI, web interface) is **not yet decided**.
 
 | Area | Current tool / approach | Purpose | Notes |
 |---|---|---|---|
-| Operating system | Arch Linux desktop | Main GM workstation | Other machines are also available; target coverage is open. |
+| Operating system | Arch Linux desktop | Main GM workstation | GNOME on Wayland. **Decided:** Linux only; NixOS and non-NixOS machines are both targets. |
 | Browser | Chromium | Hosts multiple game-related pages | Multiple independently useful pages/windows. |
 | Player communication | VDO.Ninja | Connects participants and transports media | Existing URLs can include detailed application-specific settings. |
-| Visual presentation | Draw.io / Excalidraw, shown through Chromium and VDO.Ninja | Displays art, maps, and in-game material | Content is presented as a browser view; exact per-game pages vary. |
-| Music | Regular YouTube in Chromium, audio shared through VDO.Ninja | Background music / atmosphere | The video itself is not intended as the player-facing presentation. |
-| Dice | Discord dice bot | Player/GM dice rolls | Replacement is desirable eventually, not a launch prerequisite. |
-| Recording | OBS Studio | Records sessions | Audio balance and recording checks currently require attention. |
+| Visual presentation | Draw.io / Excalidraw, shown through Chromium and VDO.Ninja | Displays art, maps, and in-game material | Content is presented as a browser view; exact per-game pages vary. Draw.io today, Excalidraw planned. Roll20 is no longer used. |
+| Music | Regular YouTube in Chromium, audio shared through VDO.Ninja | Background music / atmosphere | The video itself is not intended as the player-facing presentation. The GM joins the room a second time through a dedicated music link, shares the YouTube tab's audio from it, and mutes that tab locally. |
+| Dice | Discord dice bot | Player/GM dice rolls | Replacement is desirable eventually, not a launch prerequisite. The GM uses the Discord desktop app; players are sent the channel link. |
+| Recording | OBS Studio | Records sessions | Audio balance and recording checks currently require attention. OBS records a VDO.Ninja scene link through a browser source; each game has its own OBS scene. |
 | Microphone / effects | Existing microphone and audio interface; EasyEffects considered | GM voice, future NPC voice presets | EasyEffects NPC effects are **planned**, not established as an existing production workflow. |
 | Software provisioning | Nix proposed; NixOS is used on at least one other device | Reproducible dependencies and application availability | Nix is an agreed direction for this product, not a description of the present desktop setup. |
 
 ### 3.2 Current manual preparation — Confirmed at the goal level
 
-The GM launches Chromium and opens the required VDO.Ninja links, visual-presentation content, YouTube, and other game pages; launches OBS; checks media sharing and recording; and adjusts audio. Player links are handled separately. The exact number of tabs, display layout, selected OBS sources, and audio-routing topology have **not** been fully documented.
+The GM launches Chromium and opens the required VDO.Ninja links, visual-presentation content, YouTube, and other game pages; launches OBS; checks media sharing and recording; and adjusts audio. Player links are handled separately.
+
+**Documented on 2026-11-11** for the Samosbor campaign. Only the roles are listed here; the links themselves are in the GM's presets.
+
+| What | Who opens it | Notes |
+|---|---|---|
+| VDO.Ninja director link | GM, in the browser | GM only. Carries the room password. |
+| VDO.Ninja scene link | OBS, as a browser source | GM only. Carries the room password. Never opened by the launcher; it is part of the OBS scene. |
+| VDO.Ninja player links | Each player | One link per player, each with its own stream id. They use a hash, not the password. |
+| VDO.Ninja music link | GM, in the browser | Publishes the music to the room. |
+| VDO.Ninja screen-share link | GM, in the browser | Publishes the board or map window to the room. |
+| YouTube | GM, in the browser | Source of the music. |
+| Draw.io board | GM, in the browser | In its own window, so it can be shared. |
+| Discord channel | GM in the desktop app; players by link | Dice rolls. |
+
+The steps the GM still performs by hand each session (sharing the music tab, muting sources in OBS, and so on) are written as `checks` in the game preset and listed after every launch. Display layout and audio device routing have **not** been documented.
 
 ### 3.3 Important characteristics to preserve
 
@@ -178,7 +197,7 @@ These ideas are relevant to future compatibility but **should not drive MVP comp
 - The effective game/machine selection is visible to the GM.
 - An unresolved or incompatible machine requirement is surfaced rather than silently ignored.
 
-**Open:** Whether machine selection is automatic, manual, or both.
+**Decided:** Both. The machine is chosen automatically by hostname, and the GM can choose one by hand. A computer that matches no machine preset is an error, never a guess.
 
 ### FR-03 — Rely on Nix for reproducible software availability (MVP)
 
@@ -191,7 +210,7 @@ These ideas are relevant to future compatibility but **should not drive MVP comp
 - The product can identify and report requirements that provisioning alone cannot satisfy (e.g., device-specific permissions).
 - Supported systems and known limitations are documented.
 
-**Open:** Target OS distribution(s) and whether support is Linux-only initially. Nix is an explicit product requirement; no specific module, flake structure, or provisioning mechanism is mandated by this PRD.
+**Decided:** Linux only. Nix packages the launcher on every machine. On NixOS a module also installs the applications. On other distributions (the main desktop is Arch) the applications come from the system's own packages or Flatpak, and the launcher checks that they are present. This narrows the first acceptance criterion on non-NixOS machines; see §17.6.
 
 ### FR-04 — Launch the configured environment (MVP)
 
@@ -206,7 +225,7 @@ These ideas are relevant to future compatibility but **should not drive MVP comp
 - Launch failures are attributed to the specific affected component.
 - Complete VDO.Ninja URLs are preserved, including their native parameters.
 
-**Open:** Exact expected window placement and behavior when a required application is already running.
+**Decided:** Window placement is not controlled; on Wayland a launcher cannot place other applications' windows. An OBS that is already running is left untouched and reported, because its profile and scene cannot be changed from outside. Browser pages open in a dedicated browser profile whether or not that browser is already running.
 
 ### FR-05 — Reuse native application configuration (MVP)
 
@@ -225,7 +244,7 @@ These ideas are relevant to future compatibility but **should not drive MVP comp
 - Native configuration references are discoverable or documented.
 - The product clearly reports missing referenced presets/assets.
 
-**Open:** Which native OBS/EasyEffects configuration operations are essential for the first release versus later integrations.
+**Decided:** For OBS, a game names a scene and optionally a profile and scene collection, by the names OBS shows; the launcher starts OBS with them and checks, read-only, that they exist. Starting a recording is optional and off by default. EasyEffects is not part of the MVP.
 
 ### FR-06 — Provide player invitations after launch (MVP)
 
@@ -241,7 +260,7 @@ These ideas are relevant to future compatibility but **should not drive MVP comp
 - The invitation remains accessible after its initial display during the launcher’s active use.
 - A missing invitation link is reported as a configuration issue rather than replaced with a guessed URL.
 
-**Open:** Should the product merely display/copy invitations, or should it support sending them to Discord/other messengers later? **Assumption for MVP: display and copy only.**
+**Decided:** Display and copy only. Because each player has their own link, the invitation is one message per named player: their own link followed by the links everyone shares. Each message is copied separately. A game without per-player links gets a single message.
 
 ### FR-07 — Provide meaningful status and errors (MVP)
 
@@ -255,7 +274,7 @@ These ideas are relevant to future compatibility but **should not drive MVP comp
 - Manual checks are explicitly identified as manual.
 - The launcher does not claim full readiness when essential verification is unavailable.
 
-**Open:** Which automated health checks can be delivered reliably in the MVP.
+**Decided:** The MVP checks only what it can know for certain: whether each command ran, failed or was not found; whether the presets are valid; whether the applications are installed; whether the OBS names in a preset exist; and whether a game has player links. Everything about sound, screen sharing and recording is a manual check, written in the game preset and listed after every launch.
 
 ### FR-08 — Make presets easy to maintain (MVP)
 
@@ -270,7 +289,7 @@ These ideas are relevant to future compatibility but **should not drive MVP comp
 - The project provides a minimal example game, a second game example, and guidance for common changes.
 - Configuration mistakes are reported with enough context to fix them.
 
-**Open:** Whether editing the underlying files is sufficient or an interactive preset editor is desired. **Assumption for MVP: file-based editing is acceptable, provided it is simple and well documented.**
+**Decided:** Presets are plain TOML files edited by hand and read at launch, so an edit takes effect without rebuilding anything. There is no built-in editor.
 
 ### FR-09 — Avoid disruptive or unsafe actions (MVP)
 
@@ -287,6 +306,8 @@ These ideas are relevant to future compatibility but **should not drive MVP comp
 ## 8. Interaction model — Initial recommendation, not a fixed implementation
 
 The launcher needs a **simple entry point with a preset list, launch action, status, and shareable invitation**. A lightweight CLI with interactive selection is a plausible first interface; GUI or web UI remains possible if usability warrants it.
+
+**Decided:** A command-line program. Run without arguments it lists the games, launches the chosen one, and stays open with a small menu for copying each player's invitation and re-showing the status. The invitation can also be shown or copied at any later time, and a separate check command reports problems with presets and installed software before game time.
 
 Example **behavioral sketch** (not prescribed syntax):
 
@@ -339,11 +360,13 @@ A preset may combine:
 
 ### Game versus session
 
-**Confirmed:** Presets describe **games, not individual sessions**, and must be reusable across many sessions. **Next priority after MVP:** Session-specific values should be easy to supply or update without revisiting the whole game setup. For example, session B can use new VDO.Ninja or music links while retaining session A’s game-level OBS scene collection, applications, voice presets, and machine settings. This is an explicit near-term need, **not a required MVP feature**. Whether changes are saved, carried forward, or reset between sessions is unresolved. Session notes, logs, and recordings remain out of scope for the MVP preset system.
+**Confirmed:** Presets describe **games, not individual sessions**, and must be reusable across many sessions. **Next priority after MVP:** Session-specific values should be easy to supply or update without revisiting the whole game setup. For example, session B can use new VDO.Ninja or music links while retaining session A’s game-level OBS scene collection, applications, voice presets, and machine settings. This is an explicit near-term need, **not a required MVP feature**. Whether changes are saved, carried forward, or reset between sessions is unresolved. **Confirmed on 2026-11-11:** the VDO.Ninja room and password stay the same for a whole campaign; what changes between sessions is the music and the map links. Session notes, logs, and recordings remain out of scope for the MVP preset system.
 
 ### Preset variants
 
 **Proposed:** A game may optionally expose a small number of named variants, for example “desktop stream” or “minimal laptop.” Whether this is represented as machine overrides, distinct presets, or selectable variants is intentionally left to design, provided the GM does not have to duplicate unchanged information.
+
+**Decided for the MVP:** Variants are not built. A machine preset can override parts of a game for that machine, which covers the "minimal laptop" case. Alternative links for the same purpose are kept as comments in the game file.
 
 ## 10. Non-functional requirements
 
@@ -409,6 +432,8 @@ No numerical launch-time or reliability targets are set yet; measure a baseline 
 
 ## 13. Open questions and information gaps
 
+**Superseded in version 0.2.** Most of these questions were answered on 2026-11-11. The answers are in §17.7, in the same order, and what is still open is in §17.8. The table below is kept as it was written in version 0.1; its "current assumption" column is no longer current.
+
 These questions should be resolved with the GM during discovery. None should silently be treated as a confirmed implementation requirement.
 
 | Priority | Question / gap | Current assumption or impact |
@@ -440,6 +465,8 @@ These describe observable outcomes, **not mandated technical work packages**.
 
 A user can select a game, start its configured applications/resources, view the outcome, and copy the correct player invitation. At least one real campaign preset is demonstrated.
 
+**Status:** Built; see §17.9 for what has and has not been tried.
+
 ### Milestone B — Reproducibility and second machine
 
 The same game can be launched on a second supported machine via the Nix-managed setup, with documented machine-specific differences and no duplicated campaign definition.
@@ -462,7 +489,7 @@ The MVP is acceptable when all of the following are demonstrable:
 
 - [ ] The GM can choose between at least two named game configurations.
 - [ ] At least one game works with two machine profiles/configurations without maintaining two full game copies.
-- [ ] Required software is reproducibly available through the documented Nix environment on supported machines.
+- [ ] Required software is available on supported machines: installed by the Nix module on NixOS, and taken from the system and verified by the launcher's check command elsewhere. *(Reworded in version 0.2; see §17.6.)*
 - [ ] A selected game launches its requested applications and opens the exact configured URLs.
 - [ ] Complete VDO.Ninja links can be supplied unchanged; the launcher does not require custom video/audio parameters.
 - [ ] Native application configuration references are supported for the MVP's agreed integrations.
@@ -474,8 +501,138 @@ The MVP is acceptable when all of the following are demonstrable:
 
 ## 16. Developer handoff notes
 
-This PRD intentionally leaves room for engineering decisions. In particular, it does **not** prescribe the launcher's programming language, internal architecture, CLI framework, exact Nix module design, process supervision strategy, or how native configuration files are deployed.
+This PRD intentionally leaves room for engineering decisions. In particular, it does **not** prescribe the launcher's programming language, internal architecture, CLI framework, exact Nix module design, process supervision strategy, or how native configuration files are deployed. The choices made for these since version 0.1 are recorded in §17.5; they are engineering choices and can change without changing the requirements.
 
 Before coding, the team should validate the **High-priority open questions** and inspect a representative existing game setup. Where decisions are not yet possible, prefer the smallest behavior that satisfies the documented requirements and can evolve without forcing users to rewrite their game presets.
 
 **Central product test:** Can the GM start a known campaign, on a supported computer, with very little preparation and immediately obtain the correct links for players—without maintaining a second configuration system for all the underlying applications?
+
+## 17. Agreed decisions and GM preferences (2026-11-11)
+
+This section records what the GM and the developer agreed after version 0.1. It is authoritative: where it differs from older wording above, this section wins. Anything not covered here is unchanged from version 0.1.
+
+How to use the launcher and how to write presets is in [README.md](../README.md). This section says what was decided and why.
+
+### 17.1 GM preferences
+
+Stated by the GM during the design discussion. Treat them as constraints when making later choices.
+
+- **Simplicity over power at this stage.** Prefer the setup with fewer moving parts, even if it leaves a manual step.
+- **YouTube stays the primary music source.** Playing local tracks as well would be welcome but is not critical.
+- **Open to a more convenient music setup** than sharing a browser tab, as long as it stays simple.
+- **Presets are private.** They are kept out of the launcher's version control because the links carry room names and passwords.
+- **Each player always gets the same personal link.** Player names are fixed in the game preset.
+- **Game pages open in their own browser profile,** separate from everyday browsing.
+- **The code must stay extendable.** New kinds of things to launch are added as modules, without reworking the launcher.
+- **Work is committed to a local git repository.** There is no remote yet.
+- **Left out on purpose:** the Google Drive folder of game files, and Roll20, which is no longer used.
+- **Planned by the GM:** Excalidraw in place of Draw.io, and EasyEffects voice effects for NPCs.
+
+### 17.2 Product decisions
+
+| Topic | Decision |
+|---|---|
+| Platforms | Linux only. NixOS and non-NixOS machines are both targets. |
+| What Nix provides | The launcher on every machine. On NixOS a module also installs OBS and Chromium. On other distributions the applications come from the system (packages or Flatpak) and the launcher's check command verifies them. |
+| Applications in the MVP | OBS, Chromium, and any other application a game names (Discord today). EasyEffects is not included. |
+| Interface | Command line: a game picker, per-component status, and a menu after launch for copying invitations. |
+| Game and machine | One file per game and one per machine. A machine file lists only what differs on that computer and can override parts of one game. Game files are never copied per machine. |
+| Machine selection | By hostname, or chosen by hand. No match is an error. |
+| Browser | A dedicated Chromium profile. Pages open as tabs in one new window; a page can ask for its own window. On each machine the GM signs in to Google and YouTube in that profile once. |
+| OBS | A game names an OBS scene and, optionally, a profile and scene collection. The VDO.Ninja scene link stays inside OBS as a browser source. Each machine keeps its own OBS settings under the same names; the launcher never writes to them or copies them between machines. |
+| OBS already running | Left untouched and reported. |
+| Recording | Started only when a game explicitly asks for it. Off by default. |
+| Invitations | Plain text. One message per named player: their own link, then the links everyone shares. Display and copy only. |
+| Keeping GM links private | By structure. Invitations are built only from the invitation part of a game preset. Pages the GM opens are kept in a different part and have no path into an invitation. |
+| Manual checks | Written in the game preset next to the thing they concern, and listed after every launch. The launcher never reports sound, screen sharing or recording as verified. |
+| Failures | One component failing does not stop the others. Each failure names its component and suggests what to do. |
+| Stopping | The launcher never stops an application. Quitting the launcher leaves everything running. |
+| Window placement | Not controlled. |
+| Music | The current flow is kept: YouTube in a tab, shared from the VDO.Ninja music page. The steps are listed as manual checks. |
+
+### 17.3 Presets
+
+- **Format:** TOML, read at launch. No rebuild after an edit.
+- **Layers:** the effective game is the game file with the machine's overrides for that game merged on top. Entries are named (for example a page called `music`), so an override can change one entry and inherit the rest. Session overrides (Milestone D) will be one more layer of the same kind.
+- **URLs:** used exactly as written. The launcher never parses or rewrites them.
+- **Where they live:** in a directory given by `--presets`, by `$RPG_LAUNCHER_PRESETS`, or by default `~/.config/rpg-launcher`. On the main desktop they are in `presets/` inside the launcher checkout. That directory is ignored by the launcher's git repository and is its own local git repository.
+- **Examples:** `examples/presets` holds two games and two machines with placeholder links. Real links never go there.
+
+### 17.4 The main desktop, as found on 2026-11-11
+
+| Item | State |
+|---|---|
+| System | Arch Linux, GNOME on Wayland, hostname `archlinux` |
+| Nix | 2.26, with flakes enabled |
+| OBS | Flatpak `com.obsproject.Studio`. Settings under `~/.var/app/com.obsproject.Studio/config/obs-studio`. |
+| OBS content | One profile and one scene collection, both named `Untitled`. One scene per game, plus an experimental one for Samosbor, each with a browser source for that game's VDO.Ninja scene link at 1920×1080 with "Control audio via OBS" on. |
+| Chromium | System package |
+| Discord | Flatpak `com.discordapp.Discord` |
+| EasyEffects | System package, not used by the launcher |
+
+### 17.5 Engineering choices
+
+These can change without changing the requirements.
+
+- **Language:** Python 3.11 or later, standard library only.
+- **Components:** each kind of thing a game can start is one module in `src/rpg_launcher/components` behind a shared interface (`base.py`). OBS, plain applications and browser pages are the three built in. Adding one means writing a module and adding it to the list in `components/__init__.py`. Loading components from outside the repository is not supported.
+- **Invitations are not a component.** They stay in the core so the privacy rule in §17.2 lives in one place.
+- **Nix:** a flake with the package, a development shell and a NixOS module (`flake.nix`, `nix/`). The module takes OBS and Chromium from the system's own nixpkgs.
+- **Tests:** standard-library `unittest` in `tests/`, run as part of the Nix build.
+- **Processes:** applications are started detached and are not supervised afterwards.
+
+### 17.6 Differences from version 0.1
+
+- **Nix on non-NixOS machines (FR-03, §15).** Version 0.1 asked for required software to be available through the Nix environment. On Arch the applications come from the system instead and are verified by the launcher. Running the nixpkgs builds of OBS and Chromium on Arch would need graphics-driver wrapping and would not use the existing Flatpak OBS settings.
+- **Per-player invitations (FR-06).** Version 0.1 described one invitation. The GM gives each player their own link, so there is one message per player.
+- **Preset variants (§9).** Not built.
+
+### 17.7 Answers to the questions in §13
+
+In the order of the table in §13.
+
+| Question | Answer |
+|---|---|
+| Target machines/OS | Linux only; NixOS and non-NixOS. Windows is out. |
+| Applications to launch in the MVP | OBS, Chromium, and any application a game names. Not EasyEffects. |
+| Current VDO.Ninja topology | Documented in §3.2. The director and scene links are private; players get one link each. |
+| Meaning of "works out of the box" | Installing and opening, with existing OBS scenes selected by name. The launcher does not create OBS sources, audio routing or recording paths. |
+| Preset edit UX | Hand-edited TOML files. |
+| Session overrides | Partly answered: the room stays the same for a campaign; music and map links change. How changes persist is still open. |
+| Browser behavior | A dedicated profile; tabs in one new window, with own windows on request. |
+| Player invitation format | Plain text, one message per player. |
+| Native OBS assets | The main desktop is inventoried in §17.4. Other machines and OBS plugins are not. |
+| Audio arrangement | Partly answered. Music reaches players through the VDO.Ninja music page. OBS takes its sound from the browser source; its other sources, including the microphone, are muted to avoid doubled sound. Device-level routing is not documented. |
+| Verification expectations | Still open; after the MVP. |
+| Already-running behavior | OBS is left untouched and reported. Browser pages open in the dedicated profile either way. Other applications are simply started. |
+| Stop/relaunch expectations | The launcher never stops anything. Launching again opens the pages again. |
+| Game resources | Cloud-hosted today (Draw.io on Google Drive, YouTube). Local files are not managed. |
+| Interface choice | Command line. |
+| Sharing method | Copy only. |
+| Presets and versioning | A private directory under local git. Synchronising it between machines is still open. |
+| Multi-GM | Not discussed; the single-GM assumption stands. |
+
+### 17.8 Still open
+
+- **Session overrides:** whether a session's changes apply once, are remembered, or are saved by name.
+- **Music through a virtual audio device:** would remove the share-tab and mute-tab steps and allow local tracks. Untested: sending one browser window's sound to a chosen device, and VDO.Ninja picking that device by itself.
+- **OBS recording settings:** the GM's notes ask for MKV, "Indistinguishable Quality" and 30 FPS; the `Untitled` profile records hybrid MP4, "High Quality, Medium File Size" and 60 FPS. A dedicated profile that games name would settle it.
+- **Synchronising presets between machines.**
+- **OBS settings on a second machine:** each machine needs scenes with the same names; nothing creates them yet.
+- **End-to-end verification** of sound and recording (§10), after the MVP.
+
+### 17.9 What has been built and tried
+
+As of 2026-11-11:
+
+- **Built:** launching a game, showing and copying invitations, the check command, listing games and machines, the Nix package and the NixOS module.
+- **Tried:** the automated tests, also inside the Nix build; the interactive flow with stand-in applications; the check command against the real desktop, which finds the applications and the OBS scene.
+- **Not tried yet:** a real launch of OBS, Discord and Chromium on the desktop; any NixOS machine; a real session.
+- **Presets written:** Samosbor 2 and the desktop machine. Player names in it are placeholders. Frostpunk has no preset yet; only its OBS scene is known.
+
+### 17.10 Order of later work
+
+1. Try a real launch on the desktop, then on a NixOS machine (Milestone B).
+2. Session overrides (Milestone D).
+3. Music through a virtual audio device, after a short trial.
+4. EasyEffects voice presets.
