@@ -8,15 +8,11 @@ import shlex
 import sys
 
 from rpg_launcher import __version__, clipboard, doctor, invitation, paths
-from rpg_launcher.launcher import Launcher, Outcome, Status, manual_checks
-from rpg_launcher.presets import (
-    Game,
-    Machine,
-    Player,
-    PresetError,
-    PresetStore,
-    find_presets_dir,
-)
+from rpg_launcher.components.base import FAIL, OK, WARN, Outcome, Status
+from rpg_launcher.launcher import Launcher, manual_checks
+from rpg_launcher.machine import Machine
+from rpg_launcher.presets import Game, Player, PresetStore, find_presets_dir
+from rpg_launcher.schema import PresetError
 
 _COLORS = {"green": "32", "yellow": "33", "red": "31", "bold": "1", "dim": "2"}
 
@@ -99,9 +95,10 @@ def _status_lines(outcome: Outcome, width: int, show_command: bool) -> list[str]
 
 def _launch(game: Game, machine: Machine, dry_run: bool) -> tuple[list[Outcome], list[str]]:
     """Run the launch, printing each component's outcome as it happens."""
+    # A dry pass yields every label up front, so the status column lines up.
+    planned = Launcher(game, machine, dry_run=True).run()
+    width = max((len(outcome.label) for outcome in planned), default=0)
     launcher = Launcher(game, machine, dry_run=dry_run, log_dir=paths.log_dir())
-    labels = ["OBS", *game.apps, *(item.label for item in game.open)]
-    width = max((len(label) for label in labels), default=0)
 
     report = ["Dry run, nothing is started:" if dry_run else "Starting game environment..."]
     print(report[0])
@@ -278,14 +275,14 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     findings = doctor.diagnose(store, getattr(args, "machine", None), game_id)
 
     marks = {
-        doctor.OK: _paint("ok  ", "green"),
-        doctor.WARN: _paint("warn", "yellow"),
-        doctor.FAIL: _paint("FAIL", "red"),
+        OK: _paint("ok  ", "green"),
+        WARN: _paint("warn", "yellow"),
+        FAIL: _paint("FAIL", "red"),
     }
     for finding in findings:
         print(f"  {marks[finding.level]}  {finding.text}")
-    failures = sum(finding.level == doctor.FAIL for finding in findings)
-    warnings = sum(finding.level == doctor.WARN for finding in findings)
+    failures = sum(finding.level == FAIL for finding in findings)
+    warnings = sum(finding.level == WARN for finding in findings)
     print(
         f"\n{failures} problem(s), {warnings} warning(s). This checks presets and "
         f"installed software only, not sound, screen sharing or recording."

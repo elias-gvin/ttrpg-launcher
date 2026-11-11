@@ -20,10 +20,13 @@ class ExamplePresets(unittest.TestCase):
     def test_one_game_file_serves_two_machines(self):
         desktop = self.store.load_game("samosbor", self.store.load_machine("desktop"))
         laptop = self.store.load_game("samosbor", self.store.load_machine("laptop"))
-        board = {game: next(i for i in game.open if i.id == "board") for game in (desktop, laptop)}
-        self.assertTrue(board[desktop].window)
-        self.assertFalse(board[laptop].window)
-        self.assertEqual(board[desktop].url, board[laptop].url)
+        on_desktop, on_laptop = (
+            next(page for page in game.parts["open"] if page.id == "board")
+            for game in (desktop, laptop)
+        )
+        self.assertTrue(on_desktop.window)
+        self.assertFalse(on_laptop.window)
+        self.assertEqual(on_desktop.url, on_laptop.url)
 
     def test_machine_does_not_change_the_invitation(self):
         desktop = self.store.load_game("samosbor", self.store.load_machine("desktop"))
@@ -46,7 +49,7 @@ class GameValidation(PresetCase):
     def test_url_is_kept_exactly_as_written(self):
         url = "https://vdo.ninja/?room=R&hash=1&l=%D0%A1%D1%82&sl&q&vd=0&push=01#frag"
         self.write_game("game", f'[open.page]\nurl = "{url}"\n')
-        self.assertEqual(self.store.load_game("game").open[0].url, url)
+        self.assertEqual(self.store.load_game("game").parts["open"][0].url, url)
 
     def test_misspelled_key_is_named_with_a_suggestion(self):
         problems = self.problems('[open.music]\nulr = "https://example.org"\n')
@@ -71,7 +74,7 @@ class GameValidation(PresetCase):
 
     def test_recording_is_off_unless_asked_for(self):
         self.write_game("game", "[obs]\n")
-        self.assertFalse(self.store.load_game("game").obs.record)
+        self.assertFalse(self.store.load_game("game").parts["obs"].record)
 
 
 class MachineResolution(PresetCase):
@@ -113,16 +116,18 @@ class MachineResolution(PresetCase):
 
     def test_machine_settings_replace_only_what_they_name(self):
         self.write_machine("m", '[apps.obs]\ncommand = ["flatpak", "run", "x"]\n')
-        obs = self.store.load_machine("m").app("obs")
-        self.assertEqual(obs.command, ("flatpak", "run", "x"))
-        self.assertIn("obs", obs.process_names)
+        machine = self.store.load_machine("m")
+        self.assertEqual(machine.app("obs").command, ("flatpak", "run", "x"))
+        self.assertTrue(machine.app("obs").enabled)
+        self.assertEqual(machine.app("chromium").command, ("chromium",))
 
     def test_override_for_one_game_leaves_the_rest_inherited(self):
         self.write_game("game", '[open.a]\nurl = "https://a.example"\n[open.b]\nurl = "https://b.example"\n')
         self.write_machine("m", "[overrides.game.open.b]\nenabled = false\n")
         game = self.store.load_game("game", self.store.load_machine("m"))
-        self.assertEqual([(i.id, i.enabled) for i in game.open], [("a", True), ("b", False)])
-        self.assertEqual(game.open[1].url, "https://b.example")
+        pages = game.parts["open"]
+        self.assertEqual([(page.id, page.enabled) for page in pages], [("a", True), ("b", False)])
+        self.assertEqual(pages[1].url, "https://b.example")
 
 
 class GameLookup(PresetCase):

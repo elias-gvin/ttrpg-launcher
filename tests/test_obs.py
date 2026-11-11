@@ -2,8 +2,7 @@ import unittest
 
 from helpers import PresetCase
 
-from rpg_launcher.obs import check_references
-from rpg_launcher.presets import ObsSettings
+from rpg_launcher.components.obs import ObsSettings, check_references
 
 
 def settings(profile=None, collection=None, scene=None) -> ObsSettings:

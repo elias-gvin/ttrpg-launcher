@@ -4,21 +4,12 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-from dataclasses import dataclass
-from pathlib import Path
-from urllib.parse import unquote
 
-from rpg_launcher import clipboard
-from rpg_launcher import obs as obs_config
-from rpg_launcher.presets import AppSettings, Game, Machine, PresetError, PresetStore
-
-OK, WARN, FAIL = "ok", "warn", "fail"
-
-
-@dataclass
-class Finding:
-    level: str
-    text: str
+from rpg_launcher import clipboard, components
+from rpg_launcher.components.base import FAIL, OK, WARN, Finding
+from rpg_launcher.machine import AppSettings, Machine
+from rpg_launcher.presets import Game, PresetStore
+from rpg_launcher.schema import PresetError
 
 
 def _flatpak_app(command: tuple[str, ...]) -> str | None:
@@ -56,37 +47,22 @@ def check_app(app: AppSettings) -> str | None:
 
 def _needed_apps(game: Game) -> list[str]:
     needed = []
-    if game.obs is not None and game.obs.enabled:
-        needed.append("obs")
-    needed.extend(game.apps)
-    if any(item.enabled for item in game.open):
-        needed.append("chromium")
+    for component in components.COMPONENTS:
+        if component.key in game.parts:
+            needed += component.needed_apps(game.parts[component.key])
     return list(dict.fromkeys(needed))
 
 
 def _check_game(game: Game, machine: Machine) -> list[Finding]:
     findings = [Finding(OK, f"{game.name}: preset is valid ({game.source})")]
 
-    if not _needed_apps(game):
+    if not game.parts:
         findings.append(Finding(WARN, f"{game.name}: nothing to start or open."))
 
-    if game.obs is not None and game.obs.enabled and machine.app("obs").enabled:
-        check = obs_config.check_references(machine.app("obs").config_dir, game.obs)
-        findings += [Finding(FAIL, f"{game.name}: {text}") for text in check.problems]
-        findings += [Finding(WARN, f"{game.name}: {text}") for text in check.unverified]
-        named = game.obs.profile or game.obs.collection or game.obs.scene
-        if named and not (check.problems or check.unverified):
-            findings.append(
-                Finding(OK, f"{game.name}: the OBS names in the preset exist in OBS")
-            )
-
-    for item in game.open:
-        if item.enabled and item.url.startswith("file://"):
-            path = Path(unquote(item.url.removeprefix("file://")))
-            if not path.exists():
-                findings.append(
-                    Finding(FAIL, f"{game.name}: {item.label}: {path} does not exist.")
-                )
+    for component in components.COMPONENTS:
+        if component.key in game.parts:
+            for finding in component.diagnose(game.parts[component.key], machine):
+                findings.append(Finding(finding.level, f"{game.name}: {finding.text}"))
 
     if game.invitation.has_links:
         count = len(game.invitation.players) + len(game.invitation.shared)

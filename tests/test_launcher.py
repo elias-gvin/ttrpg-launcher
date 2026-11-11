@@ -4,7 +4,8 @@ import warnings
 from helpers import EXAMPLES, PresetCase
 
 from rpg_launcher import invitation
-from rpg_launcher.launcher import Launcher, Status, manual_checks
+from rpg_launcher.components.base import Status
+from rpg_launcher.launcher import Launcher, manual_checks
 from rpg_launcher.presets import PresetStore
 
 GAME = """
@@ -177,7 +178,7 @@ class Privacy(unittest.TestCase):
                 invitation.message_for_player(game.invitation, player)
                 for player in game.invitation.players
             ]
-            for item in game.open:
+            for item in game.parts["open"]:
                 for message in messages:
                     self.assertNotIn(item.url, message)
 
